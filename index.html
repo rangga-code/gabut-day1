@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator & Viewer Soal Modern</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        /* CSS Variables untuk Tema Putih & Biru */
+        :root {
+            --bg-praktek: #f8fafc;
+            --bg-card: #ffffff;
+            --primary: #2563eb;       /* Biru Utama */
+            --primary-hover: #1d4ed8; /* Biru Gelap saat Hover */
+            --text-main: #1e293b;     /* Abu-abu gelap hampir hitam */
+            --text-muted: #64748b;    /* Abu-abu pudar */
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-praktek);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-bottom: 60px;
+        }
+
+        header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            padding: 1rem 2rem;
+        }
+
+        .header-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo h1 {
+            font-size: 1.25rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        /* Navigasi / Kontrol Aksi */
+        .controls {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        /* Desain Custom Input File */
+        .file-upload-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background-color: #eff6ff;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn:disabled {
+            background-color: var(--border-color);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .file-upload-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* Konten Utama */
+        main {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Area Cetak Soal */
+        #print-area {
+            background: var(--bg-card);
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
+            padding: 2.5rem;
+        }
+
+        .welcome-screen {
+            text-align: center;
+            padding: 4rem 1rem;
+            color: var(--text-muted);
+        }
+
+        .welcome-screen svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        /* Styling Soal per File JSON */
+        .quiz-section {
+            margin-bottom: 3rem;
+        }
+
+        .quiz-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .quiz-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            text-transform: capitalize;
+        }
+
+        .question-card {
+            margin-bottom: 1.75rem;
+            page-break-inside: avoid; /* Mencegah nomor soal terpotong di tengah halaman PDF */
+        }
+
+        .question-text {
+            font-weight: 600;
+            font-size: 1.05rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .options-list {
+            list-style: none;
+            padding-left: 1.5rem;
+        }
+
+        .option-item {
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .option-letter {
+            font-weight: 600;
+            margin-right: 0.5rem;
+            min-width: 20px;
+        }
+
+        /* Notifikasi Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            font-weight: 500;
+            color: var(--primary);
+            padding: 1rem;
+        }
+
+        /* Responsive Mobile Friendly */
+        @media (max-width: 640px) {
+            header {
+                padding: 1rem;
+            }
+            .header-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .controls {
+                flex-direction: column;
+                width: 100%;
+            }
+            .file-upload-wrapper, .btn {
+                width: 100%;
+            }
+            #print-area {
+                padding: 1.25rem;
+            }
+            .quiz-title {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <h1>Panel Cetak Soal</h1>
+            </div>
+            <div class="controls">
+                <div class="file-upload-wrapper">
+                    <button class="btn btn-outline">📂 Pilih File/Folder JSON</button>
+                    <input type="file" id="json-input" accept=".json" multiple>
+                </div>
+                <button id="download-btn" class="btn btn-primary" disabled>
+                    📥 Download PDF
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div id="loading" class="loading">Memproses file JSON, mohon tunggu...</div>
+
+        <div id="print-area">
+            <div id="welcome" class="welcome-screen">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+                <p>Silakan pilih satu atau beberapa file JSON soal untuk memuat halaman secara vertikal.</p>
+            </div>
+            
+            <div id="quiz-container"></div>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('json-input').addEventListener('change', handleFileSelect);
+        document.getElementById('download-btn').addEventListener('click', downloadPDF);
+
+        let filesRead = 0;
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            if (files.length === 0) return;
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('welcome').style.display = 'none';
+            
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = ''; // Membersihkan tampilan lama
+            filesRead = 0;
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+
+                // Ambil Nama Judul otomatis dari nama file asli (menghilangkan .json dan simbol)
+                const quizName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+
+                reader.onload = function(e) {
+                    try {
+                        const jsonData = JSON.parse(e.target.result);
+                        
+                        // Validasi dan penyesuaian jika JSON dibungkus objek utama atau langsung array
+                        const daftarSoal = jsonData.soal ? jsonData.soal : jsonData;
+                        
+                        if (Array.isArray(daftarSoal)) {
+                            renderQuiz(quizName, daftarSoal);
+                        } else {
+                            console.error(`Struktur file ${file.name} tidak dikenali.`);
+                        }
+
+                        filesRead++;
+                        if (filesRead === files.length) {
+                            document.getElementById('loading').style.display = 'none';
+                            document.getElementById('download-btn').disabled = false;
+                        }
+                    } catch (error) {
+                        alert(`Gagal membaca file ${file.name}: Format JSON tidak sesuai.`);
+                        document.getElementById('loading').style.display = 'none';
+                    }
+                };
+
+                reader.readAsText(file);
+            }
+        }
+
+        function renderQuiz(title, questions) {
+            const container = document.getElementById('quiz-container');
+
+            // Wrapper per file JSON
+            const section = document.createElement('div');
+            section.className = 'quiz-section';
+
+            // Membuat Judul Sub-bab Soal Otomatis
+            const sectionTitle = document.createElement('h2');
+            sectionTitle.className = 'quiz-title';
+            sectionTitle.innerText = title;
+            section.appendChild(sectionTitle);
+
+            // Looping data soal (Aman untuk 20 sampai 50 nomor)
+            questions.forEach((item) => {
+                const qCard = document.createElement('div');
+                qCard.className = 'question-card';
+
+                // Elemen Teks Soal
+                const qText = document.createElement('div');
+                qText.className = 'question-text';
+                qText.innerHTML = `<span>${item.nomor || ''}.</span> <span>${item.soal}</span>`;
+                qCard.appendChild(qText);
+
+                // Membaca Pilihan Ganda berupa Objek (A, B, C, D, E)
+                if (item.pilihan && typeof item.pilihan === 'object') {
+                    const oList = document.createElement('ul');
+                    oList.className = 'options-list';
+
+                    // Melakukan iterasi key (A, B, C, dst.) pada objek pilihan
+                    Object.keys(item.pilihan).forEach(key => {
+                        const oItem = document.createElement('li');
+                        oItem.className = 'option-item';
+                        oItem.innerHTML = `<span class="option-letter">${key}.</span> <span>${item.pilihan[key]}</span>`;
+                        oList.appendChild(oItem);
+                    });
+                    qCard.appendChild(oList);
+                }
+
+                section.appendChild(qCard);
+            });
+
+            container.appendChild(section);
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('print-area');
+            const opt = {
+                margin:       [12, 12, 12, 12], // Jarak margin kertas PDF [atas, kiri, bawah, kanan] dalam mm
+                filename:     'Kumpulan_Soal_Ujian.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true }, // Menaikkan resolusi agar gambar/teks super tajam saat di-zoom
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: ['css', 'legacy'] } // Menerapkan rule pintar anti potong kalimat di tengah halaman
+            };
+
+            const btn = document.getElementById('download-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "⏳ Memproses Dokumen PDF...";
+            btn.disabled = true;
+
+            // Memproses konversi canvas ke format PDF multi-halaman
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }).catch(err => {
+                console.error(err);
+                btn.innerText = originalText;
+                btn.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>
