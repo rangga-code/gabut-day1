@@ -149,7 +149,6 @@
             padding: 2rem;
         }
 
-        /* Styling baru untuk pesan error agar terlihat jelas di web */
         .error-container {
             background-color: #fef2f2;
             border-left: 4px solid #dc2626;
@@ -203,11 +202,11 @@
     </main>
 
     <script>
-        // Set nama file sesuai repositori Anda (Gunakan huruf kecil sesuai sistem berkas GitHub)
+        // File JSON di dalam repositori gabut-day1
         const daftarFileSoal = ["pjok.json", "pkwu.json"];
 
-        // Menggunakan relative path './soal/' demi kecocokan routing di Vercel
-        const folderPath = "./soal/";
+        // URL langsung mengambil dari CDN Raw GitHub Anda agar bebas hambatan Vercel
+        const folderPath = "https://raw.githubusercontent.com/rangga-code/gabut-day1/main/soal/";
 
         document.getElementById('download-btn').addEventListener('click', downloadPDF);
         window.addEventListener('DOMContentLoaded', ambilDanProsesSoal);
@@ -239,12 +238,11 @@
                 } catch (error) {
                     console.error("Error Fetching:", error);
                     
-                    // Membuat pesan kesalahan visual langsung di halaman web
                     const errBox = document.createElement('div');
                     errBox.className = 'error-container';
                     errBox.innerHTML = `
                         <div class="error-title">⚠️ Gagal Memuat "${fileName}"</div>
-                        <div class="error-desc">Kendala: ${error.message}. <br>Pastikan file berada di folder <b>soal/${fileName}</b> dengan huruf kecil semua.</div>
+                        <div class="error-desc">Kendala: ${error.message}. <br>Pastikan file JSON sudah di-push ke GitHub utama Anda.</div>
                     `;
                     statusContainer.appendChild(errBox);
                 }
@@ -252,11 +250,10 @@
 
             loadingElement.style.display = 'none';
             
-            // Jika tidak ada satu pun berkas yang berhasil dimuat
             if (!adaDataBerhasil) {
                 loadingElement.style.display = 'block';
                 loadingElement.style.color = '#dc2626';
-                loadingElement.innerText = "Gagal memproses seluruh file JSON. Silakan periksa pesan log di atas.";
+                loadingElement.innerText = "Gagal memproses file JSON. Periksa kembali struktur file Anda di GitHub.";
             }
         }
 
