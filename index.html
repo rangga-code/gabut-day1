@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Viewer Soal PJOK & PKWU</title>
+    <title>Soal PJOK & PKWU</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        /* Desain Modern Berbasis Warna Putih & Biru */
         :root {
             --bg-praktek: #f8fafc;
             --bg-card: #ffffff;
-            --primary: #2563eb;       /* Biru Utama */
+            --primary: #2563eb;       
             --primary-hover: #1d4ed8; 
             --text-main: #1e293b;     
             --text-muted: #64748b;    
@@ -84,28 +83,22 @@
             background-color: var(--primary-hover);
         }
 
-        /* Konten Utama (Scrollable 1 Halaman) */
         main {
             max-width: 900px;
             margin: 2rem auto;
             padding: 0 1rem;
         }
 
-        /* Area Cetak Canvas ke PDF */
         #print-area {
             background: var(--bg-card);
             border-radius: 0.75rem;
             box-shadow: var(--shadow);
             padding: 2.5rem;
+            min-height: 200px;
         }
 
-        /* Pembatas per File JSON */
         .quiz-section {
             margin-bottom: 3.5rem;
-        }
-
-        .quiz-section:last-child {
-            margin-bottom: 0;
         }
 
         .quiz-title {
@@ -115,13 +108,13 @@
             border-bottom: 2px solid var(--border-color);
             padding-bottom: 0.5rem;
             margin-bottom: 1.5rem;
-            text-transform: uppercase; /* Membuat nama file pjok/pkwu jadi kapital */
+            text-transform: uppercase;
             letter-spacing: 0.05em;
         }
 
         .question-card {
             margin-bottom: 1.75rem;
-            page-break-inside: avoid; /* Mencegah satu bank soal terbelah di tengah halaman PDF */
+            page-break-inside: avoid;
         }
 
         .question-text {
@@ -156,16 +149,26 @@
             padding: 2rem;
         }
 
-        .error-msg {
-            color: #dc2626;
+        /* Styling baru untuk pesan error agar terlihat jelas di web */
+        .error-container {
             background-color: #fef2f2;
-            padding: 0.75rem;
+            border-left: 4px solid #dc2626;
+            padding: 1rem;
             border-radius: 0.375rem;
             margin-bottom: 1rem;
+        }
+
+        .error-title {
+            color: #991b1b;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .error-desc {
+            color: #b91c1c;
             font-size: 0.875rem;
         }
 
-        /* Desain Khusus Pengguna HP (Mobile Friendly) */
         @media (max-width: 640px) {
             header { padding: 1rem; }
             .header-container { flex-direction: column; align-items: stretch; text-align: center;}
@@ -200,14 +203,11 @@
     </main>
 
     <script>
-        // Data file sesuai screenshot folder repositori GitHub Anda
-        const daftarFileSoal = [
-            "pjok.json",
-            "pkwu.json"
-        ];
+        // Set nama file sesuai repositori Anda (Gunakan huruf kecil sesuai sistem berkas GitHub)
+        const daftarFileSoal = ["pjok.json", "pkwu.json"];
 
-        // Path mengarah ke sub-folder 'soal/'
-        const folderPath = "soal/";
+        // Menggunakan relative path './soal/' demi kecocokan routing di Vercel
+        const folderPath = "./soal/";
 
         document.getElementById('download-btn').addEventListener('click', downloadPDF);
         window.addEventListener('DOMContentLoaded', ambilDanProsesSoal);
@@ -217,34 +217,47 @@
             const loadingElement = document.getElementById('loading');
             const statusContainer = document.getElementById('status-container');
 
+            let adaDataBerhasil = false;
+
             for (const fileName of daftarFileSoal) {
-                // Judul otomatis dari nama file
                 const judulSoal = fileName.replace(".json", "");
                 const targetUrl = folderPath + fileName;
 
                 try {
                     const response = await fetch(targetUrl);
                     if (!response.ok) {
-                        throw new Error(`Status: ${response.status}`);
+                        throw new Error(`Gagal memuat file (HTTP Status: ${response.status})`);
                     }
                     
                     const jsonData = await response.json();
-                    // Menampung baik data berupa ".soal" maupun array murni
                     const dataSoal = jsonData.soal ? jsonData.soal : jsonData;
 
                     if (Array.isArray(dataSoal)) {
                         renderKeHalaman(judulSoal, dataSoal);
+                        adaDataBerhasil = true;
                     }
                 } catch (error) {
-                    console.error(error);
-                    const errDiv = document.createElement('div');
-                    errDiv.className = 'error-msg';
-                    errDiv.innerText = `⚠️ Gagal memuat berkas "${fileName}". Pastikan folder "soal/" berisi file tersebut.`;
-                    statusContainer.appendChild(errDiv);
+                    console.error("Error Fetching:", error);
+                    
+                    // Membuat pesan kesalahan visual langsung di halaman web
+                    const errBox = document.createElement('div');
+                    errBox.className = 'error-container';
+                    errBox.innerHTML = `
+                        <div class="error-title">⚠️ Gagal Memuat "${fileName}"</div>
+                        <div class="error-desc">Kendala: ${error.message}. <br>Pastikan file berada di folder <b>soal/${fileName}</b> dengan huruf kecil semua.</div>
+                    `;
+                    statusContainer.appendChild(errBox);
                 }
             }
 
             loadingElement.style.display = 'none';
+            
+            // Jika tidak ada satu pun berkas yang berhasil dimuat
+            if (!adaDataBerhasil) {
+                loadingElement.style.display = 'block';
+                loadingElement.style.color = '#dc2626';
+                loadingElement.innerText = "Gagal memproses seluruh file JSON. Silakan periksa pesan log di atas.";
+            }
         }
 
         function renderKeHalaman(title, questions) {
@@ -289,12 +302,12 @@
         function downloadPDF() {
             const element = document.getElementById('print-area');
             const opt = {
-                margin:       [10, 12, 10, 12], // Margin halaman PDF
+                margin:       [10, 12, 10, 12],
                 filename:     'Kumpulan_Soal_Ujian.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false }, // Skala 2x agar teks & foto tajam beresolusi tinggi
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak:    { mode: ['css', 'legacy'] } // Fitur potong otomatis antar halaman agar tidak menabrak baris teks/gambar
+                pagebreak:    { mode: ['css', 'legacy'] }
             };
 
             const btn = document.getElementById('download-btn');
@@ -302,7 +315,6 @@
             btn.innerText = "⏳ Membuat Canvas PDF...";
             btn.disabled = true;
 
-            // Eksekusi canvas konversi multi halaman
             html2pdf().set(opt).from(element).save().then(() => {
                 btn.innerText = teksAsli;
                 btn.disabled = false;
