@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Cetak Soal Modern</title>
+    <title>Viewer Soal PJOK & PKWU</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        /* CSS Variables - Tema Putih & Biru */
+        /* Desain Modern Berbasis Warna Putih & Biru */
         :root {
             --bg-praktek: #f8fafc;
             --bg-card: #ffffff;
-            --primary: #2563eb;       
+            --primary: #2563eb;       /* Biru Utama */
             --primary-hover: #1d4ed8; 
             --text-main: #1e293b;     
             --text-muted: #64748b;    
@@ -46,7 +46,7 @@
         }
 
         .header-container {
-            max-width: 1000px;
+            max-width: 900px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
@@ -84,14 +84,14 @@
             background-color: var(--primary-hover);
         }
 
-        /* Konten Utama */
+        /* Konten Utama (Scrollable 1 Halaman) */
         main {
-            max-width: 1000px;
+            max-width: 900px;
             margin: 2rem auto;
-            padding: 0 1.5rem;
+            padding: 0 1rem;
         }
 
-        /* Area Tampilan & Cetak Soal */
+        /* Area Cetak Canvas ke PDF */
         #print-area {
             background: var(--bg-card);
             border-radius: 0.75rem;
@@ -99,7 +99,7 @@
             padding: 2.5rem;
         }
 
-        /* Styling per Bab Soal */
+        /* Pembatas per File JSON */
         .quiz-section {
             margin-bottom: 3.5rem;
         }
@@ -115,12 +115,13 @@
             border-bottom: 2px solid var(--border-color);
             padding-bottom: 0.5rem;
             margin-bottom: 1.5rem;
-            text-transform: capitalize;
+            text-transform: uppercase; /* Membuat nama file pjok/pkwu jadi kapital */
+            letter-spacing: 0.05em;
         }
 
         .question-card {
             margin-bottom: 1.75rem;
-            page-break-inside: avoid; /* Mencegah soal terpotong di tengah halaman PDF */
+            page-break-inside: avoid; /* Mencegah satu bank soal terbelah di tengah halaman PDF */
         }
 
         .question-text {
@@ -137,7 +138,7 @@
         }
 
         .option-item {
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.35rem;
             display: flex;
             align-items: flex-start;
         }
@@ -164,12 +165,12 @@
             font-size: 0.875rem;
         }
 
-        /* Mobile Friendly */
+        /* Desain Khusus Pengguna HP (Mobile Friendly) */
         @media (max-width: 640px) {
             header { padding: 1rem; }
             .header-container { flex-direction: column; align-items: stretch; text-align: center;}
             .btn { width: 100%; }
-            #print-area { padding: 1.25rem; }
+            #print-area { padding: 1.5rem 1rem; }
             .quiz-title { font-size: 1.25rem; }
         }
     </style>
@@ -179,11 +180,11 @@
     <header>
         <div class="header-container">
             <div class="logo">
-                <h1>Panel Daftar Soal</h1>
+                <h1>Bank Soal Sekolah</h1>
             </div>
             <div class="controls">
                 <button id="download-btn" class="btn btn-primary">
-                    📥 Download PDF
+                    📥 Download PDF (.pdf)
                 </button>
             </div>
         </div>
@@ -193,71 +194,60 @@
         <div id="status-container"></div>
         
         <div id="print-area">
-            <div id="loading" class="loading">Sedang memuat seluruh soal dari folder...</div>
+            <div id="loading" class="loading">Memuat soal dari folder...</div>
             <div id="quiz-container"></div>
         </div>
     </main>
 
     <script>
-        // ==========================================
-        // 1. DAFTARKAN NAMA FILE JSON ANDA DI SINI
-        // ==========================================
-        // Tuliskan semua nama file JSON yang ada di dalam "folder soal/" Anda.
-        // Nama judul halaman akan otomatis diambil dari nama file ini.
+        // Data file sesuai screenshot folder repositori GitHub Anda
         const daftarFileSoal = [
-            "soal-komputer.json",
-            "soal-bahasa.json"
-            // Tambahkan nama file lainnya di sini seiring bertambahnya soal
+            "pjok.json",
+            "pkwu.json"
         ];
 
-        const folderPath = "folder soal/";
+        // Path mengarah ke sub-folder 'soal/'
+        const folderPath = "soal/";
 
         document.getElementById('download-btn').addEventListener('click', downloadPDF);
-        
-        // Jalankan fungsi load data otomatis saat halaman dibuka
-        window.addEventListener('DOMContentLoaded', loadSemuaSoal);
+        window.addEventListener('DOMContentLoaded', ambilDanProsesSoal);
 
-        async function loadSemuaSoal() {
+        async function ambilDanProsesSoal() {
             const container = document.getElementById('quiz-container');
             const loadingElement = document.getElementById('loading');
             const statusContainer = document.getElementById('status-container');
-            
-            if (daftarFileSoal.length === 0) {
-                loadingElement.innerText = "Belum ada file JSON yang didaftarkan di dalam kode.";
-                return;
-            }
 
             for (const fileName of daftarFileSoal) {
-                // Nama soal otomatis dari nama file (menghilangkan .json, '-' atau '_')
-                const judulSoal = fileName.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
-                const fullUrl = folderPath + fileName;
+                // Judul otomatis dari nama file
+                const judulSoal = fileName.replace(".json", "");
+                const targetUrl = folderPath + fileName;
 
                 try {
-                    const response = await fetch(fullUrl);
+                    const response = await fetch(targetUrl);
                     if (!response.ok) {
-                        throw new Error(`Gagal memuat file: ${fileName} (Status: ${response.status})`);
+                        throw new Error(`Status: ${response.status}`);
                     }
                     
                     const jsonData = await response.json();
-                    const daftarSoal = jsonData.soal ? jsonData.soal : jsonData;
+                    // Menampung baik data berupa ".soal" maupun array murni
+                    const dataSoal = jsonData.soal ? jsonData.soal : jsonData;
 
-                    if (Array.isArray(daftarSoal)) {
-                        renderQuiz(judulSoal, daftarSoal);
+                    if (Array.isArray(dataSoal)) {
+                        renderKeHalaman(judulSoal, dataSoal);
                     }
                 } catch (error) {
                     console.error(error);
                     const errDiv = document.createElement('div');
                     errDiv.className = 'error-msg';
-                    errDiv.innerText = `⚠️ Perhatian: File "${fileName}" tidak dapat diakses atau format salah. Pastikan file ada di dalam 'folder soal/'`;
+                    errDiv.innerText = `⚠️ Gagal memuat berkas "${fileName}". Pastikan folder "soal/" berisi file tersebut.`;
                     statusContainer.appendChild(errDiv);
                 }
             }
 
-            // Hilangkan text loading jika proses selesai
             loadingElement.style.display = 'none';
         }
 
-        function renderQuiz(title, questions) {
+        function renderKeHalaman(title, questions) {
             const container = document.getElementById('quiz-container');
 
             const section = document.createElement('div');
@@ -299,25 +289,26 @@
         function downloadPDF() {
             const element = document.getElementById('print-area');
             const opt = {
-                margin:       [12, 12, 12, 12],
-                filename:     'Kumpulan_Soal_Lengkap.pdf',
+                margin:       [10, 12, 10, 12], // Margin halaman PDF
+                filename:     'Kumpulan_Soal_Ujian.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true }, 
+                html2canvas:  { scale: 2, useCORS: true, logging: false }, // Skala 2x agar teks & foto tajam beresolusi tinggi
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak:    { mode: ['css', 'legacy'] } 
+                pagebreak:    { mode: ['css', 'legacy'] } // Fitur potong otomatis antar halaman agar tidak menabrak baris teks/gambar
             };
 
             const btn = document.getElementById('download-btn');
-            const originalText = btn.innerText;
-            btn.innerText = "⏳ Memproses PDF...";
+            const teksAsli = btn.innerText;
+            btn.innerText = "⏳ Membuat Canvas PDF...";
             btn.disabled = true;
 
+            // Eksekusi canvas konversi multi halaman
             html2pdf().set(opt).from(element).save().then(() => {
-                btn.innerText = originalText;
+                btn.innerText = teksAsli;
                 btn.disabled = false;
             }).catch(err => {
                 console.error(err);
-                btn.innerText = originalText;
+                btn.innerText = teksAsli;
                 btn.disabled = false;
             });
         }
