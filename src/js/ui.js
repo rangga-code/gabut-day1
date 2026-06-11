@@ -1,7 +1,9 @@
 const UI = {
     messageInput: document.getElementById('messageInput'),
     timeInput: document.getElementById('timeInput'),
-    imageInput: document.getElementById('imageInput'),
+    galleryFileInput: document.getElementById('galleryFileInput'),
+    filePickerBtn: document.getElementById('filePickerBtn'),
+    fileNameDisplay: document.getElementById('fileNameDisplay'),
     
     btnGenerate: document.getElementById('generateBtn'),
     btnDownload: document.getElementById('downloadBtn'),
@@ -11,6 +13,7 @@ const UI = {
     
     imgResult: document.getElementById('resultImage'),
     loader: document.getElementById('loader'),
+    loaderText: document.getElementById('loaderText'),
     placeholder: document.getElementById('placeholder'),
     container: document.getElementById('resultContainer'),
     tagsContainer: document.getElementById('tagsContainer'),
@@ -22,9 +25,10 @@ const UI = {
         this.timeInput.value = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     },
 
-    showLoading() {
+    showLoading(customMessage = "SEDANG MERENDER GAMBAR...") {
         this.btnGenerate.disabled = true;
-        this.btnGenerate.innerHTML = '<i class="fas fa-hammer"></i> RENDERING...';
+        this.btnGenerate.innerHTML = '<i class="fas fa-hammer fa-spin"></i> RUNNING...';
+        this.loaderText.innerText = customMessage;
         this.successActions.style.display = 'none';
         this.imgResult.style.display = 'none';
         this.placeholder.style.display = 'none';
@@ -39,21 +43,27 @@ const UI = {
         this.container.classList.add('active');
         
         this.btnGenerate.disabled = false;
-        this.btnGenerate.innerHTML = '<i class="fas fa-sync"></i> RE-GENERATE';
+        this.btnGenerate.innerHTML = '<i class="fas fa-terminal"></i> RUN GENERATOR';
         this.successActions.style.display = 'grid';
     },
 
     showError() {
         this.loader.style.display = 'none';
         this.placeholder.style.display = 'block';
-        this.placeholder.innerHTML = '<i class="fas fa-bomb" style="color:#ff3333"></i><p style="color:#ff3333; font-weight:900;">API ERROR / TIMEOUT</p>';
+        this.placeholder.innerHTML = '<i class="fas fa-bomb" style="color:#ff3333"></i><p style="color:#ff3333; font-weight:900;">API TIMEOUT / ERROR</p>';
         this.btnGenerate.disabled = false;
         this.btnGenerate.innerHTML = '<i class="fas fa-redo"></i> COBA LAGI';
     },
 
+    resetFilePicker() {
+        this.galleryFileInput.value = '';
+        this.fileNameDisplay.innerText = 'Tidak ada foto dipilih';
+        this.filePickerBtn.style.background = 'var(--neo-cyan)';
+    },
+
     renderHistory(items, onLoadItem, onDelItem) {
         if (items.length === 0) {
-            this.historyList.innerHTML = '<p class="empty-history">Belum ada riwayat pembuatan chat.</p>';
+            this.historyList.innerHTML = '<p class="empty-history">Belum ada data riwayat.</p>';
             this.clearHistoryBtn.style.display = 'none';
             return;
         }
@@ -67,7 +77,7 @@ const UI = {
             div.innerHTML = `
                 <div class="history-info">
                     <div class="h-text">${item.text}</div>
-                    <div class="h-time">Waktu: ${item.time}</div>
+                    <div class="h-time">Jam: ${item.time}</div>
                 </div>
                 <div class="history-actions">
                     <button class="history-btn load" data-index="${index}"><i class="fas fa-folder-open"></i></button>
