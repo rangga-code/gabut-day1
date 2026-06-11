@@ -2,9 +2,7 @@
   "version": 2,
   "cleanUrls": true,
   "trailingSlash": false,
-  "routes": [
-    { "src": "/image/(.*)", "dest": "/public/image/$1" },
-    { "src": "/src/(.*)", "dest": "/src/$1" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/image/(.*)", "destination": "/public/image/$1" }
   ]
 }
