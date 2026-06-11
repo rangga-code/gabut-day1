@@ -1,6 +1,6 @@
 const CONFIG_API = {
-    endpoint: "https://docs-alip.clutch.web.id/imagecreator/iqc",
-    apikey: "alipaiapikeybaru" 
+    endpoint: "https://ranggacodeapi.vercel.app/api/maker/iqc",
+    apikey: "RANGGACODE-API" 
 };
 
 function buildAlipIqcUrl(text, time, imageUrl) {
