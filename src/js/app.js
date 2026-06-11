@@ -1,68 +1,75 @@
-let currentBlobUrl = '';
+let currentGeneratedUrl = '';
 
-// Inisialisasi Event Listener saat halaman dimuat
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // Klik tombol generate
-    UI.btnGenerate.addEventListener('click', async () => {
-        const messageText = UI.messageInput.value.trim();
-        if (!messageText) {
+    // Set waktu otomatis perangkat saat pertama dibuka
+    UI.setSystemTime();
+
+    // Event handler klik tombol generate
+    UI.btnGenerate.addEventListener('click', () => {
+        const text = UI.messageInput.value.trim();
+        const time = UI.timeInput.value.trim() || "12:00";
+        const imageUrl = UI.imageInput.value.trim();
+
+        if (!text) {
             UI.messageInput.focus();
             return;
         }
 
         UI.showLoading();
 
-        // Menyusun data payload JSON
-        const payload = {
-            sender: UI.senderInput.value.trim() || "other",
-            message: messageText,
-            imageUrl: UI.imageInput.value.trim() || "",
-            timestamp: UI.timeInput.value.trim() || "12.00",
-            time: UI.timeInput.value.trim() || "12.00",
-            status: {
-                carrierName: UI.carrierInput.value.trim() || "INDOSAT",
-                batteryPercentage: parseInt(UI.batteryInput.value) || 100,
-                signalStrength: 4,
-                wifi: true
-            },
-            backgroundUrl: UI.bgInput.value.trim() || "",
-            readStatus: true,
-            emojiStyle: "apple"
+        // Bangun target URL dari modul api.js
+        const targetApiUrl = buildAlipIqcUrl(text, time, imageUrl);
+
+        // Render Gambar via Object Image JavaScript (Pre-loading)
+        const renderImage = new Image();
+        renderImage.src = targetApiUrl;
+        renderImage.crossOrigin = "Anonymous";
+
+        renderImage.onload = function() {
+            currentGeneratedUrl = targetApiUrl;
+            UI.showSuccess(targetApiUrl);
         };
 
+        renderImage.onerror = function() {
+            UI.showError();
+        };
+    });
+
+    // Event handler klik tombol download
+    UI.btnDownload.addEventListener('click', async () => {
+        if (!currentGeneratedUrl) return;
+        UI.btnDownload.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SAVING...';
+
         try {
-            const blobData = await fetchIqcImage(payload);
+            const response = await fetch(currentGeneratedUrl);
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
             
-            // Bersihkan memori blob lama jika ada
-            if (currentBlobUrl) window.URL.revokeObjectURL(currentBlobUrl);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = blobUrl;
+            a.download = `IQC_ALIP_${Date.now()}.png`;
             
-            currentBlobUrl = window.URL.createObjectURL(blobData);
-            UI.showSuccess(currentBlobUrl);
-        } catch (err) {
-            UI.showError("Koneksi API Gagal / Server Down");
+            document.body.appendChild(a);
+            a.click();
+            
+            window.URL.revokeObjectURL(blobUrl);
+            document.body.removeChild(a);
+        } catch (error) {
+            window.open(currentGeneratedUrl, '_blank');
+        } finally {
+            UI.btnDownload.innerHTML = '<i class="fas fa-download"></i> SIMPAN GAMBAR';
         }
     });
 
-    // Klik tombol download/save gambar
-    UI.btnDownload.addEventListener('click', () => {
-        if (!currentBlobUrl) return;
-        const a = document.createElement('a');
-        a.href = currentBlobUrl;
-        a.download = `IQC_NEO_${Date.now()}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    });
-
-    // Fitur Quick Tag untuk merubah isi form dengan cepat
+    // Event handler pengisian cepat klik tag contoh teks
     UI.tagsContainer.addEventListener('click', (e) => {
         if (e.target.classList.contains('neo-tag')) {
             UI.messageInput.value = e.target.innerText;
         }
     });
 
-    // Jalankan generate lewat tombol Enter
+    // Jalankan generate lewat enter pada keyboard
     UI.messageInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') UI.btnGenerate.click();
     });
