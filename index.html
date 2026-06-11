@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IQC PRO V2 - NEO BRUTALISM</title>
+    <title>IQC PRO V2 - MODERN GENERATOR</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -19,21 +19,30 @@
                 <h1>IQC PRO</h1>
             </div>
             <div class="status-badge">
-                <span class="dot"></span> READY
+                <span class="dot"></span> ACTIVE
             </div>
         </header>
+
+        <section class="neo-box info-box">
+            <h2>📱 Buat Kutipan Chat iPhone Instan!</h2>
+            <p>Ubah teks obrolan biasa menjadi gambar tangkapan layar (*screenshot*) kuote chat iPhone yang estetik, rapi, dan terlihat sangat nyata dalam hitungan detik.</p>
+        </section>
 
         <section class="neo-box preview-box" id="resultContainer">
             <div class="placeholder-content" id="placeholder">
                 <i class="fas fa-bolt-lightning"></i>
                 <p>READY TO GENERATE IPHONE CHAT</p>
             </div>
-            <div class="cyber-loader" id="loader"></div>
+            
+            <div class="neo-loader-wrapper" id="loader">
+                <div class="neo-spinner"></div>
+                <p>SEDANG MERENDER GAMBAR...</p>
+            </div>
+
             <img id="resultImage" alt="Generated Chat Preview">
         </section>
 
         <main class="neo-box form-box">
-            
             <div class="input-group">
                 <label>KUSTOM WAKTU (TIME)</label>
                 <input type="text" id="timeInput" value="12:00" placeholder="Contoh: 09:45">
@@ -59,12 +68,33 @@
                 <button class="neo-btn btn-primary" id="generateBtn">
                     <i class="fas fa-wand-magic-sparkles"></i> GENERATE CHAT
                 </button>
-                <button class="neo-btn btn-secondary" id="downloadBtn">
-                    <i class="fas fa-download"></i> SIMPAN GAMBAR
-                </button>
+                
+                <div class="share-group" id="successActions" style="display: none;">
+                    <button class="neo-btn btn-secondary" id="downloadBtn">
+                        <i class="fas fa-download"></i> SIMPAN
+                    </button>
+                    <button class="neo-btn btn-accent" id="shareBtn">
+                        <i class="fas fa-share-nodes"></i> BAGIKAN
+                    </button>
+                </div>
             </div>
-
         </main>
+
+        <section class="neo-box history-box">
+            <h3><i class="fas fa-history"></i> RIWAYAT PEMBUATAN</h3>
+            <div class="history-list" id="historyList">
+                <p class="empty-history">Belum ada riwayat pembuatan chat.</p>
+            </div>
+            <button class="clear-history-btn" id="clearHistoryBtn" style="display: none;">Hapus Semua Riwayat</button>
+        </section>
+
+        <section class="neo-box invite-box">
+            <h3>📢 Suka dengan Website ini?</h3>
+            <p>Bantu dukung kami dengan membagikan platform generator ini ke teman-teman atau grup komunitasmu!</p>
+            <button class="neo-btn btn-share-app" id="shareAppBtn">
+                <i class="fas fa-heart"></i> AJAK TEMAN SEKARANG
+            </button>
+        </section>
         
         <footer class="neo-footer">
             DEVELOPED BY <b>RANGGA CODE</b>
