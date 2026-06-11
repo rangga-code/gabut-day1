@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>IQC PRO V2 - MODERN GENERATOR</title>
     
+    <link rel="shortcut icon" href="https://ranggacodeapi.vercel.app/image/favicon.ico" type="image/x-icon">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="IQC PRO V2 - MODERN GENERATOR">
+    <meta property="og:description" content="Bikin screenshot chat iPhone palsu estetik jadi gampang banget disini! Coba sekarang gratis.">
+    <meta property="og:image" content="https://ranggacodeapi.vercel.app/image/avenixmd.jpg"> 
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -15,17 +25,17 @@
     <div class="app-container">
         <header class="neo-header">
             <div class="brand">
-                <span>GENERATOR V2</span>
-                <h1>IQC PRO</h1>
+                <span><i class="fas fa-code"></i> RANGGA CODE</span>
+                <h1>IQC PRO V2</h1>
             </div>
             <div class="status-badge">
-                <span class="dot"></span> ACTIVE
+                <span class="dot"></span> ONLINE
             </div>
         </header>
 
         <section class="neo-box info-box">
-            <h2>📱 Buat Kutipan Chat iPhone Instan!</h2>
-            <p>Ubah teks obrolan biasa menjadi gambar tangkapan layar (*screenshot*) kuote chat iPhone yang estetik, rapi, dan terlihat sangat nyata dalam hitungan detik.</p>
+            <h2><i class="mobile-icon fas fa-mobile-alt"></i> Buat Kutipan Chat iPhone Instan!</h2>
+            <p>Ubah teks obrolan biasa menjadi gambar tangkapan layar (*screenshot*) kuote chat iPhone yang estetik, rapi, dan terlihat nyata dalam hitungan detik.</p>
         </section>
 
         <section class="neo-box preview-box" id="resultContainer">
@@ -35,8 +45,13 @@
             </div>
             
             <div class="neo-loader-wrapper" id="loader">
-                <div class="neo-spinner"></div>
-                <p>SEDANG MERENDER GAMBAR...</p>
+                <div class="loading-cyber-grid">
+                    <div class="cube c1"></div>
+                    <div class="cube c2"></div>
+                    <div class="cube c3"></div>
+                    <div class="cube c4"></div>
+                </div>
+                <p id="loaderText">CONNECTING TO RANGGACODE API...</p>
             </div>
 
             <img id="resultImage" alt="Generated Chat Preview">
@@ -44,17 +59,23 @@
 
         <main class="neo-box form-box">
             <div class="input-group">
-                <label>KUSTOM WAKTU (TIME)</label>
+                <label><i class="fas fa-clock"></i> KUSTOM WAKTU (TIME)</label>
                 <input type="text" id="timeInput" value="12:00" placeholder="Contoh: 09:45">
             </div>
 
             <div class="input-group">
-                <label>URL GAMBAR PESAN / IMAGE URL (OPSIONAL)</label>
-                <input type="text" id="imageInput" placeholder="Masukkan link gambar jika ada...">
+                <label><i class="fas fa-images"></i> FOTO PESAN (LANGSUNG DARI GALERI HP / PC)</label>
+                <div class="file-upload-container">
+                    <input type="file" id="galleryFileInput" accept="image/*" style="display: none;">
+                    <button type="button" class="neo-btn btn-file-trigger" id="filePickerBtn">
+                        <i class="fas fa-cloud-upload-alt"></i> PILIH FOTO
+                    </button>
+                    <span class="file-name-text" id="fileNameDisplay">Tidak ada foto dipilih</span>
+                </div>
             </div>
 
             <div class="input-group">
-                <label>ISI PESAN CHAT (TEXT)</label>
+                <label><i class="fas fa-comment-alt"></i> ISI PESAN CHAT (TEXT)</label>
                 <input type="text" id="messageInput" placeholder="Tulis isi pesan palsu disini..." autocomplete="off">
             </div>
 
@@ -66,7 +87,7 @@
 
             <div class="action-buttons">
                 <button class="neo-btn btn-primary" id="generateBtn">
-                    <i class="fas fa-wand-magic-sparkles"></i> GENERATE CHAT
+                    <i class="fas fa-terminal"></i> RUN GENERATOR
                 </button>
                 
                 <div class="share-group" id="successActions" style="display: none;">
@@ -81,23 +102,23 @@
         </main>
 
         <section class="neo-box history-box">
-            <h3><i class="fas fa-history"></i> RIWAYAT PEMBUATAN</h3>
+            <h3><i class="fas fa-code-branch"></i> CONSOLE LOG / RIWAYAT</h3>
             <div class="history-list" id="historyList">
-                <p class="empty-history">Belum ada riwayat pembuatan chat.</p>
+                <p class="empty-history">Belum ada data riwayat.</p>
             </div>
             <button class="clear-history-btn" id="clearHistoryBtn" style="display: none;">Hapus Semua Riwayat</button>
         </section>
 
         <section class="neo-box invite-box">
-            <h3>📢 Suka dengan Website ini?</h3>
+            <h3><i class="fas fa-bullhorn"></i> Suka dengan Website ini?</h3>
             <p>Bantu dukung kami dengan membagikan platform generator ini ke teman-teman atau grup komunitasmu!</p>
             <button class="neo-btn btn-share-app" id="shareAppBtn">
-                <i class="fas fa-heart"></i> AJAK TEMAN SEKARANG
+                <i class="fas fa-paper-plane"></i> SEBARKAN LINK WEBSITENYA
             </button>
         </section>
         
         <footer class="neo-footer">
-            DEVELOPED BY <b>RANGGA CODE</b>
+            POWERED BY <b>RANGGA CODE REST API</b>
         </footer>
     </div>
 
