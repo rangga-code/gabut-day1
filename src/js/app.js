@@ -3,10 +3,11 @@ let localHistory = JSON.parse(localStorage.getItem('iqc_history')) || [];
 let globalSelectedFile = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Inisialisasi waktu sistem saat ini & muat data riwayat lokal
     UI.setSystemTime();
     updateHistoryUI();
 
-    // SINKRONISASI COUPLING TOMBOL UNTUK MEMBUKA GALERI HP (FIXED)
+    // SINKRONISASI TOMBOL UNTUK MEMBUKA BROWSER FILE / GALERI HP
     if (UI.filePickerBtn && UI.galleryFileInput) {
         UI.filePickerBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -14,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // PANTAU JIKA USER SELESAI MEMILIH GAMBAR
+    // PANTAU JIKA USER SELESAI MEMILIH GAMBAR DARI PERANGKAT
     if (UI.galleryFileInput) {
         UI.galleryFileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
@@ -28,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 1. ENGINE RUN GENERATOR
+    // 1. ENGINE UTAMA - RUN GENERATOR CHAT
     UI.btnGenerate.addEventListener('click', async () => {
         const text = UI.messageInput.value.trim();
         const time = UI.timeInput.value.trim() || "12:00";
@@ -41,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         UI.showLoading("MENGECEK KOMPONEN FILE...");
         let uploadedImageUrl = '';
 
-        // PROSES UNGGAH OTOMATIS JIKA ADA GAMBAR DARI GALERI
+        // PROSES UNGGAH OTOMATIS JIKA USER MEMILIH FOTO PROFIL/PESAN DARI GALERI
         if (globalSelectedFile) {
             try {
                 UI.showLoading("UPLOADING IMAGE TO SERVER...");
@@ -55,10 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const uploadJson = await uploadResponse.json();
                 
                 if (uploadJson.data && uploadJson.data.url) {
+                    // Konversi URL tmpfiles menjadi link direct download (dl) agar bisa diakses API Alip
                     uploadedImageUrl = uploadJson.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
                 }
             } catch (error) {
-                console.error("Gagal unggah biner gambar:", error);
+                console.error("Gagal unggah biner gambar ke peladen cadangan:", error);
             }
         }
 
@@ -72,7 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
         renderImage.onload = function() {
             currentGeneratedUrl = targetApiUrl;
             UI.showSuccess(targetApiUrl);
-            saveToHistory(text, time);
+            
+            // Simpan data lengkap termasuk tautan gambar agar riwayat bisa diakses saat offline/API down
+            saveToHistory(text, time, targetApiUrl);
         };
 
         renderImage.onerror = function() {
@@ -80,10 +84,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
 
-    // 2. DOWNLOAD IMAGE
+    // 2. SISTEM UNDUH / DOWNLOAD GAMBAR KE PENYIMPANAN
     UI.btnDownload.addEventListener('click', async () => {
         if (!currentGeneratedUrl) return;
-        UI.btnDownload.innerHTML = '<i class="fas fa-spinner fa-spin"></i>...';
+        const originalText = UI.btnDownload.innerHTML;
+        UI.btnDownload.innerHTML = '<i class="fas fa-spinner fa-spin"></i> DOWNLOAD...';
 
         try {
             const response = await fetch(currentGeneratedUrl);
@@ -92,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const a = document.createElement('a');
             a.href = blobUrl;
-            a.download = `IQC_${Date.now()}.png`;
+            a.download = `IQC_RanggaCode_${Date.now()}.png`;
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(blobUrl);
@@ -100,26 +105,53 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch {
             window.open(currentGeneratedUrl, '_blank');
         } finally {
-            UI.btnDownload.innerHTML = '<i class="fas fa-download"></i> SIMPAN';
+            UI.btnDownload.innerHTML = originalText;
         }
     });
 
-    // 3. BAGIKAN HASIL GAMBAR CHAT
-    UI.btnShare.addEventListener('click', () => {
+    // 3. FITUR BAGIKAN PAKET LENGKAP (GAMBAR + TEKS AJAKAN + URL WEBSITE)
+    UI.btnShare.addEventListener('click', async () => {
         if (!currentGeneratedUrl) return;
-        if (navigator.share) {
-            navigator.share({
-                title: 'Hasil iPhone Quoted Chat Saya',
-                text: `Lihat kuote chat iPhone palsu yang saya buat di IQC PRO: "${UI.messageInput.value}"`,
-                url: currentGeneratedUrl
-            }).catch(console.error);
-        } else {
+        
+        const originalText = UI.btnShare.innerHTML;
+        UI.btnShare.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PACKING...';
+
+        try {
+            // Mengunduh biner asli dari API agar bisa dikirim sebagai file nyata di WhatsApp
+            const response = await fetch(currentGeneratedUrl);
+            const blob = await response.blob();
+            
+            const fileToShare = new File([blob], `IQC_Chat_${Date.now()}.png`, { type: blob.type });
+            const filesArray = [fileToShare];
+
+            const shareText = `Halo! Lihat nih kuote chat iPhone buatan saya: "${UI.messageInput.value}". Yuk coba bikin versi kamu sendiri, gampang banget tinggal ketik!`;
+            const shareUrl = window.location.origin; // Otomatis mendeteksi domain website tempat script berjalan
+
+            const shareData = {
+                files: filesArray,
+                title: 'IQC PRO V2 - iPhone Quote Chat',
+                text: shareText,
+                url: shareUrl
+            };
+
+            // Memvalidasi dukungan sistem operasi perangkat (Android / iOS)
+            if (navigator.canShare && navigator.canShare({ files: filesArray })) {
+                await navigator.share(shareData);
+            } else {
+                throw new Error("Sistem perangkat tidak mendukung transfer kombinasi berkas biner.");
+            }
+        } catch (error) {
+            console.warn("Mengalihkan ke sistem fallback (Salin tautan):", error);
+            
+            // Mekanisme cadangan aman jika browser/perangkat tidak mendukung Web Share API Level 2
             navigator.clipboard.writeText(currentGeneratedUrl);
-            alert('Link hasil gambar chat berhasil disalin ke papan klip!');
+            alert('Tautan gambar berhasil disalin! Perangkat Anda belum mendukung fitur kirim gambar langsung dari browser.');
+        } finally {
+            UI.btnShare.innerHTML = originalText;
         }
     });
 
-    // 4. BAGIKAN ALAMAT LINK WEBSITE UTAMA
+    // 4. BAGIKAN TAUTAN PROMO WEBSITE UTAMA
     UI.btnShareApp.addEventListener('click', () => {
         if (navigator.share) {
             navigator.share({
@@ -133,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 5. HAPUS SEMUA LOG RIWAYAT
+    // 5. MENGHAPUS SEMUA LOG DATA RIWAYAT DI BROWSER
     UI.clearHistoryBtn.addEventListener('click', () => {
         if (confirm('Hapus seluruh riwayat pembuatan dari browser?')) {
             localHistory = [];
@@ -142,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // REKOMENDASI TAGS
+    // REKOMENDASI TAG KATA CEPAT (QUICK TAGS)
     UI.tagsContainer.addEventListener('click', (e) => {
         if (e.target.classList.contains('neo-tag')) UI.messageInput.value = e.target.innerText;
     });
@@ -152,22 +184,35 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-function saveToHistory(text, time) {
+// MENYIMPAN DATA DATA KE LOCALSTORAGE
+function saveToHistory(text, time, savedUrl) {
+    // Hindari penyimpanan berganda jika user menekan tombol generate berkali-kali untuk teks yang sama
     if (localHistory.length > 0 && localHistory[0].text === text) return;
-    localHistory.unshift({ text, time });
-    if (localHistory.length > 8) localHistory.pop();
+    
+    localHistory.unshift({ text, time, url: savedUrl });
+    if (localHistory.length > 8) localHistory.pop(); // Batasi kapasitas log riwayat maksimal 8 baris data
     localStorage.setItem('iqc_history', JSON.stringify(localHistory));
     updateHistoryUI();
 }
 
+// MANAGEMENT RENDER DISPLAY DATA RIWAYAT (AMBIL INSTAN TANPA API RENDER ULANG)
 function updateHistoryUI() {
     UI.renderHistory(localHistory, 
         (selectedItem) => {
+            // Mengembalikan konfigurasi parameter lama ke kolom input formulir
             UI.messageInput.value = selectedItem.text;
             UI.timeInput.value = selectedItem.time;
             globalSelectedFile = null;
             UI.resetFilePicker();
-            UI.btnGenerate.click();
+
+            // Pengecekan krusial: Jika url gambar tersedia, langsung tampilkan tanpa hit API lagi (Aman dari API Down!)
+            if (selectedItem.url) {
+                currentGeneratedUrl = selectedItem.url;
+                UI.showSuccess(selectedItem.url);
+            } else {
+                // Skema perlindungan fallback untuk riwayat versi lama sebelum pembaruan script
+                UI.btnGenerate.click(); 
+            }
         }, 
         (indexToDelete) => {
             localHistory.splice(indexToDelete, 1);
